@@ -37,7 +37,7 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 - setup sendmail
 - refactor playbook with ansible roles
 - make sure that DNS record line is correct
-
+- modify script to download egea from original site
 
 # Misc
 
