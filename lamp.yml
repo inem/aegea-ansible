@@ -1,0 +1,145 @@
+# sudo easy_install pip
+# sudo pip install ansible
+
+# ansible-playbook -i hosts lamp.yml -uroot -vvv
+
+# https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-on-ubuntu-16-04
+# https://www.digitalocean.com/community/tutorials/how-to-configure-apache-using-ansible-on-ubuntu-14-04
+# https://docs.google.com/document/d/14Sb3m9NvNDKMeVF7t9rlhop-S1d_chSNFGbJvnOVe9I/edit#
+# http://blog.antoniokov.com/all/blogengine-on-digitalocean/
+
+# On server:
+# apt-get install tasksel # http://askubuntu.com/questions/359362/how-to-correctly-install-apache2-php5-mysql-and-phpmyadmin
+# tasksel install lamp-server 
+
+
+# Related ansible links:
+# http://docs.ansible.com/ansible/unarchive_module.html
+# http://docs.ansible.com/ansible/mysql_db_module.html
+# http://docs.ansible.com/ansible/copy_module.html
+# http://docs.ansible.com/ansible/file_module.html
+# 
+# http://docs.ansible.com/
+
+- hosts: servers
+  vars:
+    mysql_root_password: root
+    http_port: 80
+    domain: "{{ inventory_hostname }}"
+
+  tasks:
+  - name: Packages
+    apt: pkg={{item}} state=present update_cache=yes
+    with_items:
+    # - libmysqlclient-dev
+    # - apache2
+    # - mysql-server
+    # - php5 
+    # - libapache2-mod-php5
+    # - php5-mcrypt 
+    # - php5-mysql
+    - python-mysqldb
+    - unzip
+    - curl
+    - wget
+    - libapache2-mod-php5
+    - php5-gd
+
+  - name: ensure mysql is running and starts on boot
+    service: name=mysql state=started enabled=true
+
+  - name: MySQL | Configuration file, my.cnf
+    action: template src=templates/my.cnf dest=/etc/mysql/my.cnf
+    tags: common
+    notify:
+      - restart mysql
+
+ 
+  - name: Creates directory
+    file: path=/var/www/egea state=directory
+
+  - name: copy egea
+    unarchive:
+      src: dist/egea.zip
+      dest: /var/www/egea/
+      owner: www-data
+      group: www-data
+      creates: /var/www/egea/favicon.ico
+      exclude: readme.txt
+
+  - name: create egea config
+    template: src=templates/config.php dest=/var/www/egea/user/config.php
+
+  - name: download info.php
+    copy:
+      src: dist/info.php
+      dest: /var/www/egea/info.php
+
+  # Setting up apache to play nice with new website
+
+  - name: create virtual host file
+    template: src=templates/virtualhost.conf dest=/etc/apache2/sites-available/{{ domain }}.conf
+
+  - name: apache2.conf
+    template: src=templates/apache2.conf dest=/etc/apache2/apache2.conf
+    notify:
+      - restart apache2
+
+  - name: ports
+    template: src=templates/ports.conf dest=/etc/apache2/ports.conf
+    notify:
+      - restart apache2
+
+  - name: enabled mod_rewrite
+    apache2_module: name=rewrite state=present
+    notify:
+      - restart apache2
+
+  - name: apache2 listen on port {{ http_port }}
+    lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen " line="Listen {{ http_port }}" state=present
+    notify:
+      - restart apache2
+
+  # - name: apache2 virtualhost on port {{ http_port }}
+  #   lineinfile: dest=/etc/apache2/sites-available/000-default.conf regexp="^<VirtualHost \*:" line="<VirtualHost *:8001>"
+  #   notify:
+  #     - restart apache2
+
+
+  - name: a2ensite {{ domain }}
+    command: a2ensite {{ domain }}
+    args:
+      creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+    notify:
+      - restart apache2
+
+
+  - name: a2dissite 000-default
+    command: a2ensite 000-default
+    args:
+      creates: /etc/apache2/sites-disabled/000-default.conf
+    notify:
+      - restart apache2
+
+
+  - name: Create a new database with name 'e2'
+    mysql_db:
+      name: e2
+      login_user: root
+      login_password: "{{ mysql_root_password }}"
+      state: present
+
+  - name: Set user and group
+    file:
+      path: /var/www
+      owner: www-data
+      group: www-data
+      recurse: Yes
+
+  handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
+
+    - name: restart mysql
+      service: name=mysql state=restarted
+
