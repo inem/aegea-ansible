@@ -1,4 +1,4 @@
-- hosts: servers
+- hosts: test #servers
   vars:
     mysql_root_password: root
     http_port: 80
@@ -15,12 +15,22 @@
     # - libapache2-mod-php5
     # - php5-mcrypt 
     # - php5-mysql
+    #
+    # ^ probably installed by tasksel
+    
     - python-mysqldb
     - unzip
     - curl
     - wget
     - libapache2-mod-php5
     - php5-gd
+    # - gtar no such package (following task is a workaround)
+
+  - name: create symlink for gtar (required by ansible unarchive module)
+    file:
+      src: /bin/tar
+      dest: /bin/gtar        
+      state: link
 
   - name: ensure mysql is running and starts on boot
     service: name=mysql state=started enabled=true
@@ -30,19 +40,19 @@
     tags: common
     notify:
       - restart mysql
-
  
   - name: Creates directory
     file: path=/var/www/egea state=directory
 
   - name: copy egea
     unarchive:
-      src: dist/egea.zip
+      src: http://blogengine.ru/download/e2_distr_v2970.zip
       dest: /var/www/egea/
       owner: www-data
       group: www-data
       creates: /var/www/egea/favicon.ico
       exclude: readme.txt
+      remote_src: True
 
   - name: create egea config
     template: src=templates/config.php dest=/var/www/egea/user/config.php
@@ -77,12 +87,6 @@
     notify:
       - restart apache2
 
-  # - name: apache2 virtualhost on port {{ http_port }}
-  #   lineinfile: dest=/etc/apache2/sites-available/000-default.conf regexp="^<VirtualHost \*:" line="<VirtualHost *:8001>"
-  #   notify:
-  #     - restart apache2
-
-
   - name: a2ensite {{ domain }}
     command: a2ensite {{ domain }}
     args:
@@ -90,14 +94,12 @@
     notify:
       - restart apache2
 
-
   - name: a2dissite 000-default
-    command: a2ensite 000-default
+    command: a2dissite 000-default
     args:
       creates: /etc/apache2/sites-disabled/000-default.conf
     notify:
       - restart apache2
-
 
   - name: Create a new database with name 'e2'
     mysql_db:

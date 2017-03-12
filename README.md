@@ -27,7 +27,7 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 
 # Run script:
 
-`ansible-playbook -i hosts lamp.yml -uroot`
+`ansible-playbook -i hosts setup.yml -uroot`
 
 
 #TODO:
