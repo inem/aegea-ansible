@@ -1,26 +1,3 @@
-# sudo easy_install pip
-# sudo pip install ansible
-
-# ansible-playbook -i hosts lamp.yml -uroot -vvv
-
-# https://www.digitalocean.com/community/tutorials/how-to-install-linux-apache-mysql-php-lamp-stack-on-ubuntu-16-04
-# https://www.digitalocean.com/community/tutorials/how-to-configure-apache-using-ansible-on-ubuntu-14-04
-# https://docs.google.com/document/d/14Sb3m9NvNDKMeVF7t9rlhop-S1d_chSNFGbJvnOVe9I/edit#
-# http://blog.antoniokov.com/all/blogengine-on-digitalocean/
-
-# On server:
-# apt-get install tasksel # http://askubuntu.com/questions/359362/how-to-correctly-install-apache2-php5-mysql-and-phpmyadmin
-# tasksel install lamp-server 
-
-
-# Related ansible links:
-# http://docs.ansible.com/ansible/unarchive_module.html
-# http://docs.ansible.com/ansible/mysql_db_module.html
-# http://docs.ansible.com/ansible/copy_module.html
-# http://docs.ansible.com/ansible/file_module.html
-# 
-# http://docs.ansible.com/
-
 - hosts: servers
   vars:
     mysql_root_password: root
