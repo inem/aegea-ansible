@@ -34,10 +34,12 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 - test it on a separate instance
 - rename main playbook
 - copy additional stuff into separate folder
-- setup sendmail
+- setup sendmail - http://blog.antoniokov.com/all/blogengine-on-digitalocean/ (ru)
 - refactor playbook with ansible roles
 - make sure that DNS record line is correct
 - modify script to download egea from original site
+- figure out what causes bug with uploads
+- get rid of tasksel?
 
 # Misc
 
