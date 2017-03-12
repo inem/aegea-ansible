@@ -1,8 +1,5 @@
 <?php
 
-// $SERVER_PORT = 80;
-// $_SERVER["SERVER_PORT"] = 80;
-
 // after changing some of these params it may be necessary
 // to drop the cache
 // for that, go to your-website-address/?go=@sync
