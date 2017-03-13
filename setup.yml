@@ -24,7 +24,7 @@
     vsftpd_anonymous_enable: 'NO'
     vsftpd_local_enable: 'YES'
     vsftpd_write_enable: 'YES'
-    vsftpd_local_umask: '002'
+    vsftpd_local_umask: '077'
 
   tasks:
   - name: Packages
@@ -51,7 +51,7 @@
     # tags: common
 
   - name: PHP | Configuration file, php.ini
-    action: template src=templates/etc-php5-apache2-php-ini dest=/etc/php5/apache2/php.ini
+    action: template src=templates/php.ini dest=/etc/php5/apache2/php.ini
     # tags: common
 
   # - name: create symlink for gtar (required by ansible unarchive module)
@@ -60,18 +60,17 @@
   #     dest: /bin/gtar        
   #     state: link
 
-
   ##
   # Mysql server setup.
   #
   - name: ensure mysql is running and starts on boot
     service: name=mysql state=started enabled=true
 
-  - name: MySQL | Configuration file, my.cnf
-    action: template src=templates/my.cnf dest=/etc/mysql/my.cnf
-    tags: common
-    notify:
-      - restart mysql
+  # - name: MySQL | Configuration file, my.cnf
+  #   action: template src=templates/my.cnf dest=/etc/mysql/my.cnf
+  #   tags: common
+  #   notify:
+  #     - restart mysql
 
   # - name: MySQL | Set the root password
   #   action: mysql_user user=root update_password="" login_password={{ mysql_root_password }} host=localhost
@@ -111,13 +110,13 @@
   - name: create aegea config
     template: src=templates/config.php dest={{ path }}/user/config.php
 
-  - name: create aegea htaccess
-    template: src=templates/htaccess dest={{ path }}/.htaccess
+  # - name: create aegea htaccess
+  #   template: src=templates/htaccess dest={{ path }}/.htaccess
 
-  - name: download info.php
-    copy:
-      src: dist/info.php
-      dest: "{{ path }}/info.php"
+  # - name: download info.php
+  #   copy:
+  #     src: dist/info.php
+  #     dest: "{{ path }}/info.php"
 
   - name: Set user and group
     file:
@@ -125,7 +124,6 @@
       owner: www-data
       group: www-data
       recurse: Yes
-
 
 
   ##
@@ -184,7 +182,29 @@
     action: template src=templates/vsftpd.conf dest=/etc/vsftpd.conf
     tags: ftp
 
-  
+  - name: FTP | Configuration setup
+    action: template src=templates/vsftpd.chroot_list dest=/etc/vsftpd.chroot_list
+    tags: ftp
+
+  - name: FTP | create user
+    user:
+      name: "{{ db_name }}"
+      update_password: on_create
+      password: "{{ db_password }}"
+      group: www-data
+
+  - name: Set up home dir for ftp user
+    file:
+      src: "{{ path }}"
+      dest: /home/{{ db_name }}/website
+      state: link
+    notify:
+      - restart vsftpd
+
+  - name: vsftpd disable pam_shells line
+    lineinfile: dest=/etc/pam.d/vsftpd regexp="^auth   required        pam_shells.so" line="#auth   required        pam_shells.so" state=present
+    notify:
+      - restart vsftpd
 
   handlers:
     - name: restart apache2
@@ -193,3 +213,5 @@
     - name: restart mysql
       service: name=mysql state=restarted
 
+    - name: restart vsftpd
+      service: name=vsftpd state=restarted

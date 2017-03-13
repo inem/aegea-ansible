@@ -31,12 +31,11 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 
 
 #TODO:
-- copy additional stuff into separate folder
 - setup sendmail - http://blog.antoniokov.com/all/blogengine-on-digitalocean/ (ru)
-- setup ftp
 - use tags
 - refactor playbook with ansible roles
 - SSL config?
+- setup sftp
 
 # Misc
 
@@ -47,7 +46,8 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 - https://docs.google.com/document/d/14Sb3m9NvNDKMeVF7t9rlhop-S1d_chSNFGbJvnOVe9I/edit#
 - http://blog.antoniokov.com/all/blogengine-on-digitalocean/ (ru)
 
-## Non-working but useful recipes:
+## Not working out of the box but useful playbooks:
+
 - https://github.com/fourkitchens/server-playbooks
 - http://labs.qandidate.com/blog/2013/11/21/installing-a-lamp-server-with-ansible-playbooks-and-roles/
 
@@ -57,3 +57,8 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 - http://docs.ansible.com/ansible/mysql_db_module.html
 - http://docs.ansible.com/ansible/copy_module.html
 - http://docs.ansible.com/ansible/file_module.html
+
+## Vsftpd:
+
+- http://serverfault.com/questions/364935/vsftp-login-errors-530-login-incorrect
+- https://www.digitalocean.com/community/tutorials/how-to-set-up-vsftpd-on-ubuntu-12-04
