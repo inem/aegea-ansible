@@ -14,16 +14,7 @@ sudo pip install ansible
 1. Boot up an instance of Ubuntu Wily(15.10)
 2. Set up DNS record: "A blog.example.com 111.11.11.11"
 3. Rename hosts example to hosts and put your domain name there
-4. Modify vars section of playbook if needed
-5. Before executing ansible script, run these lines manually to install LAMP stack:
-
-```
-apt-get install tasksel 
-tasksel install lamp-server
-```
-
-Manual installation of LAMP stack is a mess. I found it much easier to get it working with tasksel: http://askubuntu.com/questions/359362/how-to-correctly-install-apache2-php5-mysql-and-phpmyadmin
-
+4. Modify vars section of playbook
 
 # Run script:
 
