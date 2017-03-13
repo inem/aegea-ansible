@@ -31,12 +31,11 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 
 
 #TODO:
-- figure out what causes bug with uploads and fix th problem
 - copy additional stuff into separate folder
 - setup sendmail - http://blog.antoniokov.com/all/blogengine-on-digitalocean/ (ru)
+- setup ftp
+- use tags
 - refactor playbook with ansible roles
-- make sure that DNS record line is correct
-- get rid of tasksel?
 - SSL config?
 
 # Misc
