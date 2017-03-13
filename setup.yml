@@ -6,7 +6,7 @@
     db_password: birmanbirman
     http_port: 80
     domain: "{{ inventory_hostname }}"
-    path: /var/www/egea
+    path: /var/www/aegea
     distrib: http://blogengine.ru/download/e2_distr_v3074.zip #(beta)
     email: inem@bk.ru
 
