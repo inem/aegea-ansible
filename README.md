@@ -31,6 +31,7 @@ Manual installation of LAMP stack is a mess. I found it much easier to get it wo
 
 
 #TODO:
+- move variables to separate file
 - setup sendmail - http://blog.antoniokov.com/all/blogengine-on-digitalocean/ (ru)
 - use tags
 - refactor playbook with ansible roles
