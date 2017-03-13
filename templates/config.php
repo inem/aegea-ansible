@@ -61,7 +61,7 @@ $_config['note_url_slidedown'] = true;
 // MISC
 
 // sender address for outgoing mail (if ends with @, domain name will be added)
-$_config['mail_from'] = 'blog@';
+$_config['mail_from'] = '{{ email }}';
 
 // use 'index, follow' everywhere (otherwise will be only where necessary)
 $_config['index_follow_everything'] = true;

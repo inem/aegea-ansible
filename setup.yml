@@ -1,10 +1,30 @@
 - hosts: servers
   vars:
-    mysql_root_password: root
+    # mysql_root_password: root
+    db_name: e2
+    db_user: e2
+    db_password: birmanbirman
     http_port: 80
     domain: "{{ inventory_hostname }}"
     path: /var/www/egea
+    distrib: http://blogengine.ru/download/e2_distr_v3074.zip #(beta)
+    email: inem@bk.ru
 
+    # php.ini
+    php_max_execution_time: '300'
+    php_display_errors: 'On'
+    php_display_startup_errors: 'On'
+    php_html_errors: 'On'
+    php_post_max_size: '128M'
+    php_upload_max_filesize: '130M'
+    php_memory_limit: '260M'
+    php_date_timezone: 'US/Central'
+
+    # vsftpd
+    vsftpd_anonymous_enable: 'NO'
+    vsftpd_local_enable: 'YES'
+    vsftpd_write_enable: 'YES'
+    vsftpd_local_umask: '002'
 
   tasks:
   - name: Packages
@@ -19,23 +39,31 @@
     - php5-gd
     # - gtar - no such package (following task is a workaround)
 
-
-    # - libmysqlclient-dev
-    # - apache2
-    # - mysql-server
-    # - php5 
-    # - libapache2-mod-php5
-    # - php5-mcrypt 
-    # - php5-mysql
-    #
+    - libmysqlclient-dev
+    - apache2
+    - mysql-server
+    - php5 
+    - libapache2-mod-php5
+    - php5-mcrypt 
+    - php5-mysql
+    
     # ^ probably installed by tasksel
+    # tags: common
 
-  - name: create symlink for gtar (required by ansible unarchive module)
-    file:
-      src: /bin/tar
-      dest: /bin/gtar        
-      state: link
+  - name: PHP | Configuration file, php.ini
+    action: template src=templates/etc-php5-apache2-php-ini dest=/etc/php5/apache2/php.ini
+    # tags: common
 
+  # - name: create symlink for gtar (required by ansible unarchive module)
+  #   file:
+  #     src: /bin/tar
+  #     dest: /bin/gtar        
+  #     state: link
+
+
+  ##
+  # Mysql server setup.
+  #
   - name: ensure mysql is running and starts on boot
     service: name=mysql state=started enabled=true
 
@@ -44,7 +72,26 @@
     tags: common
     notify:
       - restart mysql
+
+  # - name: MySQL | Set the root password
+  #   action: mysql_user user=root update_password="" login_password={{ mysql_root_password }} host=localhost
+  #   tags: common
+
+  - name: MySQL | Create mysql user
+    action: mysql_user user={{ db_user }} password={{ db_password }} priv='*.*:ALL,GRANT' host=localhost state=present
+    # tags: common
+
+  - name: Create a new database
+    mysql_db:
+      name: "{{ db_name }}"
+      login_user: "{{ db_user }}"
+      login_password: "{{ db_password }}"
+      state: present
+
  
+  ##
+  # Aegea installation
+  #
   - name: Creates directory
     file: 
       path: "{{ path }}"
@@ -53,40 +100,56 @@
 
   - name: copy aegea
     unarchive:
-      src: http://blogengine.ru/download/e2_distr_v2970.zip
+      src: "{{ distrib }}"
       dest: "{{ path }}"
       owner: www-data
       group: www-data
       creates: "{{ path }}/favicon.ico"
-      # exclude: readme.txt  
+      # exclude: readme.txt - exclude causes this error: fatal: [aaa.jazzcloud.co]: FAILED! => {"changed": false, "dest": "/var/www/egea", "failed": true, "gid": 0, "group": "root", "handler": "ZipArchive", "mode": "0755", "msg": "Unexpected error when accessing exploded file: [Errno 2] No such file or directory: '/var/www/egea/.htaccess'", "owner": "root", "size": 4096, "src": "/tmp/ansible_QRkRTJ/e2_distr_v2970.zip", "state": "directory", "uid": 0}
       remote_src: True
-
-      # exclude causes this error: fatal: [aaa.jazzcloud.co]: FAILED! => {"changed": false, "dest": "/var/www/egea", "failed": true, "gid": 0, "group": "root", "handler": "ZipArchive", "mode": "0755", "msg": "Unexpected error when accessing exploded file: [Errno 2] No such file or directory: '/var/www/egea/.htaccess'", "owner": "root", "size": 4096, "src": "/tmp/ansible_QRkRTJ/e2_distr_v2970.zip", "state": "directory", "uid": 0}
 
   - name: create aegea config
     template: src=templates/config.php dest={{ path }}/user/config.php
+
+  - name: create aegea htaccess
+    template: src=templates/htaccess dest={{ path }}/.htaccess
 
   - name: download info.php
     copy:
       src: dist/info.php
       dest: "{{ path }}/info.php"
 
-  # Setting up apache to play nice with new website
+  - name: Set user and group
+    file:
+      path: /var/www
+      owner: www-data
+      group: www-data
+      recurse: Yes
 
+
+
+  ##
+  # Apache server setup.
+  #
   - name: apache2.conf
     template: src=templates/apache2.conf dest=/etc/apache2/apache2.conf
     notify:
       - restart apache2
 
-  - name: ports
-    template: src=templates/ports.conf dest=/etc/apache2/ports.conf
-    notify:
-      - restart apache2
+  # - name: ports
+  #   template: src=templates/ports.conf dest=/etc/apache2/ports.conf
+  #   notify:
+  #     - restart apache2
 
   - name: enabled mod_rewrite
     apache2_module: name=rewrite state=present
     notify:
       - restart apache2
+
+  # - name: enabled mod_headers
+  #   apache2_module: name=headers state=present
+  #   notify:
+  #     - restart apache2
 
   - name: apache2 listen on port {{ http_port }}
     lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen " line="Listen {{ http_port }}" state=present
@@ -103,26 +166,25 @@
     notify:
       - restart apache2
 
-  - name: a2dissite 000-default
+  - name: a2dissite default
     command: a2dissite 000-default
     args:
       creates: /etc/apache2/sites-disabled/000-default.conf
     notify:
       - restart apache2
 
-  - name: Create a new database with name 'e2'
-    mysql_db:
-      name: e2
-      login_user: root
-      login_password: "{{ mysql_root_password }}"
-      state: present
+  ##
+  # FTP server setup.
+  #
+  - name: FTP | vsftpd daemon package
+    action: apt pkg=vsftpd state=installed
+    tags: ftp
 
-  - name: Set user and group
-    file:
-      path: /var/www
-      owner: www-data
-      group: www-data
-      recurse: Yes
+  - name: FTP | Configuration setup
+    action: template src=templates/vsftpd.conf dest=/etc/vsftpd.conf
+    tags: ftp
+
+  
 
   handlers:
     - name: restart apache2
