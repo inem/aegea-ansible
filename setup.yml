@@ -7,8 +7,8 @@
     http_port: 80
     domain: "{{ inventory_hostname }}"
     path: /var/www/aegea
-    distrib: http://blogengine.ru/download/e2_distr_v3074.zip #(beta)
-    email: inem@bk.ru
+    distrib: http://blogengine.ru/download/e2_distr_v3082.zip #(beta)
+    email: email@example.com
 
     # php.ini
     php_max_execution_time: '300'
