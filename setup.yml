@@ -1,14 +1,16 @@
-- hosts: servers
+- hosts: all
+  remote_user: root
   vars:
-    # mysql_root_password: root
     db_name: e2
     db_user: e2
-    db_password: birmanbirman
-    http_port: 80
-    domain: "{{ inventory_hostname }}"
-    path: /var/www/aegea
-    distrib: http://blogengine.ru/download/e2_distr_v3082.zip #(beta)
+    db_password: secret
+
     email: email@example.com
+    distrib: http://blogengine.ru/download/e2_distr_v3082.zip #(beta)
+
+    path: /var/www/aegea
+    domain: "{{ inventory_hostname }}"
+    http_port: 80
 
     # php.ini
     php_max_execution_time: '300'

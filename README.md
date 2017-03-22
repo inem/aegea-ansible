@@ -13,13 +13,12 @@ sudo pip install ansible
 
 1. Boot up an instance of Ubuntu Wily(15.10)
 2. Set up DNS record: "A blog.example.com 111.11.11.11"
-3. Rename hosts example to hosts and put your domain name there
-4. Modify vars section of playbook
+3. Modify vars section of playbook
 
 # Run script:
 
-`ansible-playbook -i hosts setup.yml -uroot`
-
+`ansible-playbook -i 'serveraddress.com,' setup.yml`
+                                       ^ Notice the comma! It is required!
 
 #TODO:
 - move variables to separate file
